@@ -3,6 +3,8 @@ import copy as copy
 
 from tensor_view_1d import TensorView1D
 from tensor_view_2d import TensorView2D
+from tensor_view_act import TensorViewAct
+from tensor_view_filter import TensorViewFilter
 from tensor_data import TensorData
 import inspect
 from PyQt4 import QtGui, QtCore
@@ -15,7 +17,7 @@ gui_root_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile
 class MainWindow(QtGui.QMainWindow):
     def __init__(self, args):
         super(MainWindow, self).__init__()
-        self.setGeometry(550,350,600,370)
+        self.setGeometry(1400,70,600,370)
         self.setWindowTitle("VISUALIZATION")
         self.action_cb = args
         #self.tensor_input_list = args['tensor_input_list']
@@ -50,6 +52,8 @@ class MainWindow(QtGui.QMainWindow):
         self.watch_choice.move(520,280)
         self.watch_choice.addItem('1-DIM')
         self.watch_choice.addItem('2-DIM')
+        self.watch_choice.addItem('Activation')
+        self.watch_choice.addItem('Filter')
         self.watch_choice.resize(70,30)
         self.watch_choice.show()
         self.watch_choice.activated[str].connect(self.action_cb['on_add_watch'])
@@ -253,6 +257,13 @@ class ControlPanel(object):
             self.pyqt_env.create_window(tensor_item.pyqt_window_id, TensorView1D,
                 {'data_source':tensor_item.data_source, 'name':tensor_item.name})
             self.tensor_watch_list[index].picDIM = '1-DIM'
+        elif text == 'Activation':
+            self.pyqt_env.create_window(tensor_item.pyqt_window_id, TensorViewAct,
+                {'data_source':tensor_item.data_source, 'name':tensor_item.name, 'shape':tensor_item.shape_str, 'reshape':tensor_item.reshape})
+        elif text == 'Filter':
+            self.pyqt_env.create_window(tensor_item.pyqt_window_id, TensorViewFilter,
+                {'data_source':tensor_item.data_source, 'name':tensor_item.name, 'shape':tensor_item.shape_str, 'reshape':tensor_item.reshape})  
+
 
     def __close_tensor_view(self, index):
         tensor_item = self.tensor_watch_list[index]
@@ -392,6 +403,10 @@ class ControlPanel(object):
     def __on_filter_type_select(self, text):
         pwd = {'USER_LIST':0, 'TRAINABLE_VARIABLES':1, 'ACTIVATIONS':2, 'GLOBAL_VARIABLES':3, 'ALL_OPS':4 }
         self.cur_filter_type_index = pwd[text]
+        if pwd[text] == 2:
+            pass
+        else:
+            pass
     
     def __on_filter_str_input(self, text):
         text = str(text)

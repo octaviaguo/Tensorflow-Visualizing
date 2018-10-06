@@ -25,7 +25,6 @@ class TensorView2D(PyQTWindowWrapper):
                 np1 = np.reshape(self.data_source.data[-1],self.args.get('reshape'))
                 np2 = np.transpose(np1)
                 self.img.setImage(np.flip(np2,1))
-                print('000000000000000000000000000000000000000000000000000')
             else:
                 self.img.setImage(self.data_source.data[-1])
             self.data_source.clear_dirty()
