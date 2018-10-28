@@ -9,6 +9,7 @@ from tensor_data import TensorData
 import inspect
 from PyQt4 import QtGui, QtCore
 from pyqt_env import PyQTEnv
+import xml.etree.ElementTree as ET
 
 TEST_WATERFALL_VIEW = False
 
@@ -21,11 +22,24 @@ class MainWindow(QtGui.QMainWindow):
         self.setWindowTitle("VISUALIZATION")
         self.action_cb = args
         #self.tensor_input_list = args['tensor_input_list']
-        
-        quitAction = QtGui.QAction( 'Quit', self)
+
+        quitAction = QtGui.QAction('Quit', self)
         quitAction.triggered.connect(self.close_application)
-        
-        self.toolBar = self.addToolBar("Quit tool")
+
+        saveAction = QtGui.QAction('Save', self)
+        saveAction.setShortcut('Ctrl+S')
+        saveAction.triggered.connect(self.save_WatchList)
+
+        loadAction = QtGui.QAction('Open File...', self)
+        loadAction.setShortcut('Ctrl+O')
+        loadAction.triggered.connect(self.action_cb['load_WatchList'])
+
+        menu = self.menuBar()
+        filemenu = menu.addMenu('&File')
+        filemenu.addAction(saveAction)
+        filemenu.addAction(loadAction)
+    
+        self.toolBar = self.addToolBar("ToolBar")
         self.toolBar.addAction(quitAction)
 
         self.create_sub_windows()
@@ -38,7 +52,7 @@ class MainWindow(QtGui.QMainWindow):
 
         self.step_btn = QtGui.QPushButton("Step",self)
         self.step_btn.setStyleSheet("color: blue; font: bold 14px")
-        self.step_btn.resize(self.minimumSizeHint())
+        self.step_btn.resize(50,25)
         self.step_btn.move(520,80)
         self.step_btn.clicked.connect(self.action_cb['on_step'])
         
@@ -159,6 +173,15 @@ class MainWindow(QtGui.QMainWindow):
         else:
             pass
 
+    def save_WatchList(self):
+        choice = QtGui.QMessageBox.question(self, '',
+                                            "Do you want to save the watch_list?",
+                                            QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+        if choice == QtGui.QMessageBox.Yes:
+            self.action_cb['on_save']()
+        else:
+            pass
+
     def update_tensor_list(self, list_type, list, pos, reset_pos):
         items_str = [t.disp_name for t in list]
         self.list_model.clear()
@@ -216,7 +239,7 @@ class ControlPanel(object):
 
     tensor_select_list = []
     select_list_cur_pos = 0
-
+  
     tensor_watch_list = []
     watch_list_cur_pos = 0
 
@@ -260,10 +283,11 @@ class ControlPanel(object):
         elif text == 'Activation':
             self.pyqt_env.create_window(tensor_item.pyqt_window_id, TensorViewAct,
                 {'data_source':tensor_item.data_source, 'name':tensor_item.name, 'shape':tensor_item.shape_str, 'reshape':tensor_item.reshape})
+            self.tensor_watch_list[index].picDIM = 'Activation'
         elif text == 'Filter':
             self.pyqt_env.create_window(tensor_item.pyqt_window_id, TensorViewFilter,
                 {'data_source':tensor_item.data_source, 'name':tensor_item.name, 'shape':tensor_item.shape_str, 'reshape':tensor_item.reshape})  
-
+            self.tensor_watch_list[index].picDIM = 'Filter'
 
     def __close_tensor_view(self, index):
         tensor_item = self.tensor_watch_list[index]
@@ -286,18 +310,17 @@ class ControlPanel(object):
             except ValueError:
                 pass
 
-    def __on_add_watch(self,text):
-        titem = self.tensor_select_list[self.select_list_cur_pos]
-
-        new_titem = self.TensorWatchItem(titem)
-        
-        """
-        new_titem = copy.copy(titem) #shallow copy
-        new_titem.reshape = copy.copy(titem.reshape)
-        """
-        self.tensor_watch_list.append(new_titem)
-        index = len(self.tensor_watch_list)-1
-        self.__open_tensor_view(index,text)
+    def __on_add_watch(self, text):
+            titem = self.tensor_select_list[self.select_list_cur_pos]
+            new_titem = self.TensorWatchItem(titem)
+            
+            """
+            new_titem = copy.copy(titem) #shallow copy
+            new_titem.reshape = copy.copy(titem.reshape)
+            """
+            self.tensor_watch_list.append(new_titem)
+            index = len(self.tensor_watch_list)-1
+            self.__open_tensor_view(index,text)
 
     def __on_remove_watch(self):
         self.__close_tensor_view(self.watch_list_cur_pos)
@@ -436,12 +459,51 @@ class ControlPanel(object):
     def __on_close(self):
         self.quit = True
 
+    def __on_save(self):
+        NoWatchItem = len(self.tensor_watch_list)
+        watchlist = [None]*NoWatchItem
+
+        root = ET.Element('root')
+        for i in range(NoWatchItem):
+            watchlist[i] = ET.SubElement(root, 'Item'+str(i+1))
+            name = ET.SubElement(watchlist[i], 'name')
+            shape = ET.SubElement(watchlist[i], 'shape')
+            reshape = ET.SubElement(watchlist[i], 'reshape')
+            visType = ET.SubElement(watchlist[i], 'visType')
+
+            name.text = self.tensor_watch_list[i].name
+            shape.text = self.tensor_watch_list[i].shape_str
+            reshape.text = self.tensor_watch_list[i].reshape
+            visType.text = self.tensor_watch_list[i].picDIM
+
+        my = ET.tostring(root)
+        myfile = open('Saved_WatchList.xml', 'wb')
+        myfile.write(my)
+
+    def __load_WatchList(self):
+        tree = ET.parse('Saved_WatchList.xml')
+        root = tree.getroot()
+        count = len(self.tensor_watch_list)
+        print(count)
+        for elem in root:
+            n = elem[0].text
+            for t in self.all_ops:
+                if t.name == n:
+                    tem_select = self.TensorSelectItem(t.name, t.shape, t.op, self.tensor_input_list[0].name)
+                    new = self.TensorWatchItem(tem_select)
+                    self.tensor_watch_list.append(new)
+                    print('now',len(self.tensor_watch_list), 'but count: ', count)
+                    self.__open_tensor_view(count, elem[3].text)
+                    break
+            count += 1
+                    
     def __create_main_window(self, args):
         self.main_window = MainWindow(
             {
              'filter_type_list':self.filter_type_list,
              'tensor_input_list': self.tensor_input_list,
              'on_close':self.__on_close,
+             'on_save':self.__on_save,
              # global control
              'on_pause':self.__on_pause,
              'on_step':self.__on_step,
@@ -458,12 +520,14 @@ class ControlPanel(object):
              # tensor watch panel
              'on_remove_watch':self.__on_remove_watch,
              'on_add_watch':self.__on_add_watch,
-             'on_set_show':self.__on_set_show
+             'on_set_show':self.__on_set_show,
+
+             'load_WatchList':self.__load_WatchList
              }
             )
         return None
 
-    def __init__(self, filter_type_list, input_list):
+    def __init__(self, filter_type_list, input_list, loaded_list):
         for input_name in input_list:
             self.tensor_input_list.append(self.TensorInputItem(input_name))
         self.filter_str = ""
@@ -474,7 +538,10 @@ class ControlPanel(object):
         self.pyqt_env.run(self.__create_main_window, None)
         
         for input_name in input_list:
-            self.main_window.sourceInput_list.addItem(input_name)        
+            self.main_window.sourceInput_list.addItem(input_name)  
+
+        print('control_panel _init')
+        self.all_ops = loaded_list     
 
     """
     public methods

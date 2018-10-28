@@ -52,7 +52,6 @@ class PyQTEnv():
                 args = cmd[3]
                 print("create_window", new_cls)
                 self.win_slots[cmd[1]]=new_cls(args)
-                print('????')
             elif cmd[0] == 'close':
                 #print("close window", cmd[1])
                 win=self.win_slots[cmd[1]]
@@ -66,11 +65,12 @@ class PyQTEnv():
     def get_free_identity(self):
         for i in range(self.MAX_WIN_NUM):
             if self.win_slots[i] is None:
+                self.win_slots[i] = 0
                 return i
         print('get_free_identity error')
 
     def create_window(self, identity, cls, args):
-        if identity < self.MAX_WIN_NUM and self.win_slots[identity] is None:
+        if identity < self.MAX_WIN_NUM:
             self.cmd_queue.put(('create_window', identity, cls, args))
             print('create window application')
         else:

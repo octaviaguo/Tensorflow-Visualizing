@@ -73,14 +73,29 @@ class TensorMonitor(object):
                         continue
                         
 
+    @classmethod
+    def __loading(cls, session):
+        cls.prelimi_wt = []
+        for t in cls.user_tensor_list:
+            cls.prelimi_wt.append(t)
+        for t in session.graph.get_operations():
+            try:
+                tensor = t.values()[0]
+                shape = tensor.get_shape()
+                if len(shape) > 0 or True:
+                    cls.prelimi_wt.append(cls.Tensor(t.name, shape, tensor))
+            except:
+                continue
 
     @classmethod
     def __init(cls, session, input_list):
+        cls.__loading(session)      
         cls.filter_type = None
         cls.filter_str = ""
         cls.control_panel = ControlPanel(
             filter_type_list=cls.filter_types,
-            input_list=input_list
+            input_list=input_list,
+            loaded_list=cls.prelimi_wt
             )
 
     @classmethod
