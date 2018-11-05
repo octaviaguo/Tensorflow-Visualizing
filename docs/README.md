@@ -22,17 +22,20 @@ And run (take GAN.py in the test file as an example)
 ```
 
 ## API
+1. Import TensorMonitor to the file.
 ```
     import sys
     sys.path.append("../../")
     from TensorMonitor.tensor_manager import TensorMonitor
 ```
+2. Customize a list to watch.
 ```
     TensorMonitor.AddUserList(
       node_name1 = node1,
       node_name2 = node2,
       ...)
 ```
+3. Activate the visualization tool.
 ```
     TensorMonitor.Beat(sess, 
       input_name1 = feed_dict1,
