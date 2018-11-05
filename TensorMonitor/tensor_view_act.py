@@ -28,19 +28,19 @@ class TensorViewAct(PyQTWindowWrapper):
             def pressKey(self, eventQKeyEvent):
                 key = eventQKeyEvent.key()
                 if key == QtCore.Qt.Key_Up:
-                    print("Up")
+                    #print("Up")
                     self.posy = self.posy+self.h
                     self.roi.setPos([self.posx, self.posy])
                 elif key == QtCore.Qt.Key_Down:
-                    print("Down")
+                    #print("Down")
                     self.posy = self.posy-self.h
                     self.roi.setPos([self.posx, self.posy])
                 elif key == QtCore.Qt.Key_Right:
-                    print("Right")
+                    #print("Right")
                     self.posx = self.posx+self.w
                     self.roi.setPos([self.posx, self.posy])
                 elif key == QtCore.Qt.Key_Left:
-                    print("Left")
+                    #print("Left")
                     self.posx = self.posx-self.w
                     self.roi.setPos([self.posx, self.posy])
 

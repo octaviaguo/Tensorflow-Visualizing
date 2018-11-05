@@ -201,11 +201,7 @@ class TensorItem(object):
         self.op = op
         self.input_name = input_name
         #self.data_source = TensorData(start_step=ControlPanel.step_count)
-        max_n = 50
-        if len(name)>=max_n:
-            self.disp_name = name[:max_n]
-        else:
-            self.disp_name = name
+        self.disp_name = name
         try:
             shape_str = '(' + ', '.join(map(str, shape)) + ')'
             self.shape_str = shape_str
