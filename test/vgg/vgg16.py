@@ -11,10 +11,17 @@
 import tensorflow as tf
 import numpy as np
 import sys
+import os
 from scipy.misc import imread, imresize
 from imagenet_classes import class_names
 sys.path.append("../../")
 from TensorMonitor.tensor_manager import TensorMonitor
+
+#download vgg16_weights.npz
+if not os.path.exists("vgg16_weights.npz"):
+    print('vgg16_weights.npz does not exists, downloading ...')
+    os.system("wget vgg16_weights.npz https://www.cs.toronto.edu/~frossard/vgg16/vgg16_weights.npz")
+    print('Downloading finished')
 
 class vgg16:
     def __init__(self, imgs, weights=None, sess=None):
