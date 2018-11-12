@@ -121,16 +121,27 @@ class TensorMonitor(object):
         if cls.control_panel is None:
             cls.__init(session, args.keys())
 
-        tensor_watch_list = cls.control_panel.get_tensor_watch_list()
-        if len(tensor_watch_list) > 0:
-            for placeholder_name in args.keys():
-                tensor_list = [t for t in tensor_watch_list if t[4]==placeholder_name]
+        tensor_watch_dict = cls.control_panel.get_tensor_watch_list()
+
+        #print(tensor_watch_dict.keys(),len(tensor_watch_dict.keys()))
+        for input_item in tensor_watch_dict.keys():
+            tensor_list = tensor_watch_dict[input_item]
+            try:
+                if input_item.input_obj is not None:
+                    feed_dict = input_item.input_obj.prepare_input()
+                elif input_item.name in args.keys():
+                    feed_dict = args[input_item.name]
+                else:
+                    feed_dict = None
                 ops = [t[2] for t in tensor_list]
-                r = session.run(ops, feed_dict=args[placeholder_name])
+                r = session.run(ops, feed_dict=feed_dict)
                 #print(r)
                 for i,t in enumerate(tensor_list):
                     data_source = t[3]
                     data_source.set_data(r[i])
+            except Exception as e: 
+                print('session run error:')
+                print(e)
 
         cls.__check(session)
         quit = not cls.control_panel.beat(True)

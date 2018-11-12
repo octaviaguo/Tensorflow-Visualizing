@@ -1,4 +1,5 @@
 import os
+import sys
 import copy as copy
 
 from tensor_view_1d import TensorView1D
@@ -34,10 +35,15 @@ class MainWindow(QtGui.QMainWindow):
         loadAction.setShortcut('Ctrl+O')
         loadAction.triggered.connect(self.action_cb['load_WatchList'])
 
+        input_file = QtGui.QAction('Open input file', self)
+        input_file.setShortcut('Ctrl+I')
+        input_file.triggered.connect(self.open_input_file)
+
         menu = self.menuBar()
         filemenu = menu.addMenu('&File')
         filemenu.addAction(saveAction)
         filemenu.addAction(loadAction)
+        filemenu.addAction(input_file)
     
         self.toolBar = self.addToolBar("ToolBar")
         self.toolBar.addAction(quitAction)
@@ -189,6 +195,18 @@ class MainWindow(QtGui.QMainWindow):
             item = QtGui.QStandardItem(text)
             self.list_model.appendRow(item)
 
+    def open_input_file(self):
+        name = QtGui.QFileDialog.getOpenFileName(self, 'Open input file')
+        input_file = open(name, 'r')
+        DIYname = QtGui.QInputDialog.getText(self, 'Name your input choice', None)
+        save_name = DIYname[0]
+        self.action_cb['add_input'](save_name, input_file.name)
+
+    def update_input_list(self, input_list):
+        self.sourceInput_list.clear()
+        for item in input_list:
+            self.sourceInput_list.addItem(item.name)
+
     def enable_filter_input(self, enable):
         if enable is False:
             self.filter_in.setDisabled(True)
@@ -206,7 +224,7 @@ class TensorItem(object):
             shape_str = '(' + ', '.join(map(str, shape)) + ')'
             self.shape_str = shape_str
             self.reshape = []
-        except TypeError:
+        except: #TypeError: #fix for python3 
             self.shape_str = ""
             self.reshape = []
 
@@ -255,12 +273,12 @@ class ControlPanel(object):
             self.copy(tensor_select_item)
             self.data_source = TensorData(start_step=ControlPanel.step_count)
             self.pyqt_window_id = None
-            self.view = None
             self.picDIM = '1-DIM'
 
     class TensorInputItem(object):
-        def __init__(self, name):
+        def __init__(self, name, input_obj):
             self.name = name
+            self.input_obj = input_obj
 
     """
     tensor panel
@@ -343,6 +361,9 @@ class ControlPanel(object):
     def __on_input_select(self, text):
         titem = self.tensor_select_list[self.select_list_cur_pos]
         titem.input_name = text
+        input_obj = self.__get_input_obj(text)
+        if input_obj is not None:
+            input_obj.show()
 
     def __on_tensor_select(self, index):
         index = index.row()
@@ -518,14 +539,15 @@ class ControlPanel(object):
              'on_add_watch':self.__on_add_watch,
              'on_set_show':self.__on_set_show,
 
-             'load_WatchList':self.__load_WatchList
+             'load_WatchList':self.__load_WatchList,
+             'add_input':self.__add_input
              }
             )
         return None
 
     def __init__(self, filter_type_list, input_list, loaded_list):
         for input_name in input_list:
-            self.tensor_input_list.append(self.TensorInputItem(input_name))
+            self.tensor_input_list.append(self.TensorInputItem(input_name, None))
         self.filter_str = ""
         self.filter_type_list = filter_type_list
 
@@ -533,11 +555,57 @@ class ControlPanel(object):
 
         self.pyqt_env.run(self.__create_main_window, None)
         
-        for input_name in input_list:
-            self.main_window.sourceInput_list.addItem(input_name)  
+        self.main_window.update_input_list(self.tensor_input_list)
 
         print('control_panel _init')
-        self.all_ops = loaded_list     
+        self.all_ops = loaded_list
+
+        ### add_input test
+        #for test/alexnet
+        #self.__add_input('img_input')
+        #for test/basic_test
+        #self.__add_input('test_input')
+        #self.pyqt_env.run(self.__load_input, None)
+    '''
+    def __load_input(self, args):
+        ### add_input test
+        #for test/alexnet
+        self.__add_input('my_img_input', '../alexnet/img_input.py')
+        #for test/basic_test
+        self.__add_input('test_input', '../basic_test/test_input.py')
+    '''
+
+    def __get_input_obj(self, name):
+        for input_item in self.tensor_input_list:
+            if input_item.name == name:
+                return input_item.input_obj
+        return None
+
+    def __add_input(self, input_name, filename, config_dict={}):
+        import importlib
+        try:
+            placeholder_dict={}
+            for t in self.all_ops:
+                if t.op.op.type == 'Placeholder':
+                    placeholder_dict[t.name] = t.op 
+            names = os.path.split(os.path.abspath(filename))
+            path = names[0]
+            module_name = names[1].split('.')[-2]
+            print('* input_name is: %s, filename is: %s'%(input_name, filename))
+            print('* config_dict is:', config_dict)
+            print('* module path is: %s, name is: %s'%(path, module_name))
+            #add module search path
+            sys.path.append(path)
+            
+            temp_module = importlib.import_module(module_name)
+            input_obj = temp_module.TensorInput(placeholder_dict, config_dict)
+            #input_obj.show()
+
+            input_item = self.TensorInputItem(input_name, input_obj)
+            self.tensor_input_list.append(input_item)
+            self.main_window.update_input_list(self.tensor_input_list)
+        except Exception as e: 
+            print('Add_input error:', e)
 
     """
     public methods
@@ -545,17 +613,25 @@ class ControlPanel(object):
     def update_tensor_list(self, tensor_list):
         self.tensor_select_list = []
         for t in tensor_list:
-            self.tensor_select_list.append(self.TensorSelectItem(t[0], t[1], t[2], self.tensor_input_list[0].name))        
+            if len(self.tensor_input_list)>0:
+                input_name = self.tensor_input_list[0].name
+            else:
+                input_name = ''
+            self.tensor_select_list.append(self.TensorSelectItem(t[0], t[1], t[2], input_name))
         if self.cur_list_type == 0:
             self.select_list_cur_pos = 0
             self.main_window.update_tensor_list(list_type=self.cur_list_type, list=self.tensor_select_list, pos=0, reset_pos=True)
 
     def get_tensor_watch_list(self):
-        list = []
-        for t in self.tensor_watch_list:
-            if t.pyqt_window_id is not None:
-                list.append((t.name, t.reshape, t.op, t.data_source, t.input_name))
-        return list
+        dict = {}
+        for input_item in self.tensor_input_list:
+            list = []
+            for t in self.tensor_watch_list:
+                if t.pyqt_window_id is not None and input_item.name == t.input_name:
+                    list.append((t.name, t.reshape, t.op, t.data_source, t.input_name))
+            if len(list)>0:
+                dict[input_item] = list
+        return dict
 
     def beat(self, update_step_flag):
         if update_step_flag:
