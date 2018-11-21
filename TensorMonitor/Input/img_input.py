@@ -72,10 +72,7 @@ class TensorInput():
 
     def prep_feedvalue(self,):
         name = QtGui.QFileDialog.getOpenFileName(self.window, 'Choose Input Source')
-        name1 = os.path.split(os.path.abspath(name))
-        name2 = os.path.split(os.path.abspath(name1[0]))
-        image_path = name2[1] + '/' + name1[1]
-        im = np.expand_dims(imresize(imresize(imread(image_path), (256, 256)), (224, 224)), axis = 0)
+        im = np.expand_dims(imresize(imresize(imread(name), (256, 256)), (224, 224)), axis = 0)
         self.feed_dict[self.feedkey] = im
         print('3333333333333333')
 
