@@ -599,7 +599,7 @@ class ControlPanel(object):
             
             temp_module = importlib.import_module(module_name)
             input_obj = temp_module.TensorInput(placeholder_dict, config_dict)
-            #input_obj.show()
+            input_obj.show()
 
             input_item = self.TensorInputItem(input_name, input_obj)
             self.tensor_input_list.append(input_item)
