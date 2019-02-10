@@ -44,4 +44,4 @@ And run (take GAN.py in the test file as an example)
 ```
 
 ## Examples
-![](../images/example1.png)
+![](example1.png)
