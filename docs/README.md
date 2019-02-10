@@ -42,4 +42,6 @@ And run (take GAN.py in the test file as an example)
       input_name2 = feed_dict2, 
       ...)
 ```
- 
+
+## Examples
+![](images/example1.png)
