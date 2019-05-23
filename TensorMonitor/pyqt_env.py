@@ -17,6 +17,17 @@ class PyQTWindowWrapper():
         pass
     def close(self):
         pass
+    def get_pos_size(self):
+        x = self.win.pos().x()
+        y = self.win.pos().y()
+        w = self.win.size().width()
+        h = self.win.size().height()
+        #print(x,y,w,h)
+        return (x,y,w,h)
+    def set_pos_size(self, x, y, w, h):
+        #print("=======================",x,y,w,h)
+        self.win.resize(w,h)
+        self.win.move(x,y)
 
 class PyQTEnv():
     """
@@ -57,11 +68,14 @@ class PyQTEnv():
                 win=self.win_slots[cmd[1]]
                 win.close()
                 self.win_slots[cmd[1]]=None
-        
+            elif cmd[0] == 'set_win_pos_size':
+                win=self.win_slots[cmd[1]]
+                win.set_pos_size(cmd[2], cmd[3], cmd[4], cmd[5])
+
         for win in self.win_slots:
             if win is not None:
                 win.update_data()
-        
+
     def get_free_identity(self):
         for i in range(self.MAX_WIN_NUM):
             if self.win_slots[i] is None:
@@ -94,3 +108,9 @@ class PyQTEnv():
 
     def quit(self):
         QtGui.QApplication.quit()
+
+    def get_win_pos_size(self, i):
+        return self.win_slots[i].get_pos_size()
+
+    def set_win_pos_size(self, i, x, y, w, h):
+        self.cmd_queue.put(('set_win_pos_size', i, x, y, w, h))

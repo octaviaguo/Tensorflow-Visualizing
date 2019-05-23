@@ -44,7 +44,7 @@ class MainWindow(QtGui.QMainWindow):
         filemenu.addAction(saveAction)
         filemenu.addAction(loadAction)
         filemenu.addAction(input_file)
-    
+
         self.toolBar = self.addToolBar("ToolBar")
         self.toolBar.addAction(quitAction)
 
@@ -61,12 +61,12 @@ class MainWindow(QtGui.QMainWindow):
         self.step_btn.resize(50,25)
         self.step_btn.move(520,80)
         self.step_btn.clicked.connect(self.action_cb['on_step'])
-        
+
         self.watch_com = QtGui.QLabel(self)
         self.watch_com.setText('Watch :')
         self.watch_com.move(520,244)
         self.watch_com.setFont(QtGui.QFont("Times",13,weight=QtGui.QFont.Bold))
-        
+
         self.watch_choice = QtGui.QComboBox(self)
         self.watch_choice.setStyleSheet("font: bold 14px")
         self.watch_choice.move(520,280)
@@ -77,7 +77,7 @@ class MainWindow(QtGui.QMainWindow):
         self.watch_choice.resize(70,30)
         self.watch_choice.show()
         self.watch_choice.activated[str].connect(self.action_cb['on_add_watch'])
-        
+
         self.showbtn = QtGui.QCheckBox('Show',self)
         self.showbtn.move(520,195)
         self.showbtn.toggle()
@@ -90,14 +90,14 @@ class MainWindow(QtGui.QMainWindow):
         self.show_remove_btn.move(520,240)
         self.show_remove_btn.hide()
         self.show_remove_btn.clicked.connect(self.action_cb['on_remove_watch'])
-          
+
         self.hd_all_btn = QtGui.QPushButton("Hide All",self)
         self.hd_all_btn.setStyleSheet("color: red; font: bold 14px")
         self.hd_all_btn.resize(84,30)
         self.hd_all_btn.move(510,280)
-        self.hd_all_btn.hide()        
+        self.hd_all_btn.hide()
         self.hd_all_btn.clicked.connect(self.action_cb['on_hide_all'])
-        
+
         self.tensor_label = QtGui.QLabel(self)
         self.tensor_label.setAlignment(QtCore.Qt.AlignCenter)
         self.tensor_label.setGeometry(QtCore.QRect(80,180,200,20))
@@ -116,7 +116,7 @@ class MainWindow(QtGui.QMainWindow):
         self.tensor_shape_input = QtGui.QLineEdit(self)
         self.tensor_shape_input.textChanged.connect(self.action_cb['on_tensor_shape_input'])
         self.tensor_shape_input.move(160,220)
-        
+
         self.sourceInput_list = QtGui.QComboBox(self)
         self.sourceInput_list.move(160,270)
         self.sourceInput_list.activated[str].connect(self.action_cb['on_input_select'])
@@ -125,7 +125,7 @@ class MainWindow(QtGui.QMainWindow):
         listcombo.addItem("Select List")
         listcombo.addItem("Watch List")
         listcombo.move(50,100)
-        
+
         subcombo = QtGui.QComboBox(self)
         subcombo.addItem('USER_LIST')
         subcombo.addItem('TRAINABLE_VARIABLES')
@@ -138,13 +138,13 @@ class MainWindow(QtGui.QMainWindow):
         subcombo.activated[str].connect(self.action_cb['on_filter_type_select'])
 
         self.create_list_view()
-        
+
         fontset = QtGui.QFont()
         fontset.setPointSize(12)
 
         self.filter_comment = QtGui.QLabel(self)
         self.filter_comment.setText('Search Only in  ALL_OPS:')
-        self.filter_comment.setGeometry(QtCore.QRect(100,34,180,25))  
+        self.filter_comment.setGeometry(QtCore.QRect(100,34,180,25))
         self.filter_comment.setFont(fontset)
 
         self.filter_in = QtGui.QLineEdit(self)
@@ -224,7 +224,7 @@ class TensorItem(object):
             shape_str = '(' + ', '.join(map(str, shape)) + ')'
             self.shape_str = shape_str
             self.reshape = []
-        except: #TypeError: #fix for python3 
+        except: #TypeError: #fix for python3
             self.shape_str = ""
             self.reshape = []
 
@@ -253,7 +253,7 @@ class ControlPanel(object):
 
     tensor_select_list = []
     select_list_cur_pos = 0
-  
+
     tensor_watch_list = []
     watch_list_cur_pos = 0
 
@@ -300,14 +300,14 @@ class ControlPanel(object):
             self.tensor_watch_list[index].picDIM = 'Activation'
         elif text == 'Filter':
             self.pyqt_env.create_window(tensor_item.pyqt_window_id, TensorViewFilter,
-                {'data_source':tensor_item.data_source, 'name':tensor_item.name, 'shape':tensor_item.shape_str, 'reshape':tensor_item.reshape})  
+                {'data_source':tensor_item.data_source, 'name':tensor_item.name, 'shape':tensor_item.shape_str, 'reshape':tensor_item.reshape})
             self.tensor_watch_list[index].picDIM = 'Filter'
 
     def __close_tensor_view(self, index):
         tensor_item = self.tensor_watch_list[index]
         if tensor_item.pyqt_window_id is not None:
             self.pyqt_env.close(tensor_item.pyqt_window_id)
-            
+
             tensor_item.pyqt_window_id = None
 
     def __close_all_tensor_views(self):
@@ -327,7 +327,7 @@ class ControlPanel(object):
     def __on_add_watch(self, text):
             titem = self.tensor_select_list[self.select_list_cur_pos]
             new_titem = self.TensorWatchItem(titem)
-            
+
             """
             new_titem = copy.copy(titem) #shallow copy
             new_titem.reshape = copy.copy(titem.reshape)
@@ -377,7 +377,7 @@ class ControlPanel(object):
             if self.tensor_watch_list[index].showstate == False:
                 self.main_window.showbtn.setChecked(False)
             else:
-                self.main_window.showbtn.setChecked(True)   
+                self.main_window.showbtn.setChecked(True)
             self.main_window.tensor_reshape_label.setText('Reshape:   ('+str(list[index].get_reshape_str())+')')
         self.main_window.tensor_label.setText('Shape:  '+list[index].shape_str)
 
@@ -390,7 +390,7 @@ class ControlPanel(object):
             index = 0
         else:
             index = 1
-            
+
         if index != self.cur_list_type:
             if index == 0:
                 self.main_window.enable_filter_input(True)
@@ -404,7 +404,7 @@ class ControlPanel(object):
         else:
             pos = self.watch_list_cur_pos
             self.main_window.update_tensor_list(list_type=self.cur_list_type, list=self.tensor_watch_list, pos=pos, reset_pos=False)
-    
+
     def on_switch_btn(self,index):
         if index == 0:
             self.main_window.watch_choice.show()
@@ -427,7 +427,7 @@ class ControlPanel(object):
             if self.tensor_watch_list != []:
                 self.main_window.showbtn.show()
                 self.main_window.tensor_label.show()
-                self.main_window.tensor_reshape_label.show()                
+                self.main_window.tensor_reshape_label.show()
                 self.main_window.tensor_label.setText('Shape:  '+self.tensor_watch_list[0].shape_str)
                 self.main_window.tensor_reshape_label.setText('Reshape:   ('+str(self.tensor_watch_list[0].get_reshape_str())+')')
                 if self.tensor_watch_list[0].showstate == True:
@@ -447,7 +447,7 @@ class ControlPanel(object):
             pass
         else:
             pass
-    
+
     def __on_filter_str_input(self, text):
         text = str(text)
         self.filter_str = text.strip()
@@ -458,7 +458,7 @@ class ControlPanel(object):
         else:
             self.pause = False
         print(self.pause)
-     
+
     def __on_step(self):
         self.pause = True
         self.single_step_flag = True
@@ -466,7 +466,7 @@ class ControlPanel(object):
     def __on_hide_all(self):
         self.__close_all_tensor_views()
         self.main_window.showbtn.hide()
-    
+
     def __on_console_str_input(self):
         return
 
@@ -487,11 +487,21 @@ class ControlPanel(object):
             shape = ET.SubElement(watchlist[i], 'shape')
             reshape = ET.SubElement(watchlist[i], 'reshape')
             visType = ET.SubElement(watchlist[i], 'visType')
+            win_x = ET.SubElement(watchlist[i], 'win_x')
+            win_y = ET.SubElement(watchlist[i], 'win_y')
+            win_w = ET.SubElement(watchlist[i], 'win_w')
+            win_h = ET.SubElement(watchlist[i], 'win_h')
 
             name.text = self.tensor_watch_list[i].name
             shape.text = self.tensor_watch_list[i].shape_str
             reshape.text = self.tensor_watch_list[i].reshape
             visType.text = self.tensor_watch_list[i].picDIM
+
+            (x,y,w,h) = self.pyqt_env.get_win_pos_size(self.tensor_watch_list[i].pyqt_window_id)
+            win_x.text = str(x)
+            win_y.text = str(y)
+            win_w.text = str(w)
+            win_h.text = str(h)
 
         my = ET.tostring(root)
         myfile = open('Saved_WatchList.xml', 'wb')
@@ -511,9 +521,11 @@ class ControlPanel(object):
                     self.tensor_watch_list.append(new)
                     print('now',len(self.tensor_watch_list), 'but count: ', count)
                     self.__open_tensor_view(count, elem[3].text)
+                    self.pyqt_env.set_win_pos_size(self.tensor_watch_list[count].pyqt_window_id, \
+                        int(elem[4].text),int(elem[5].text),int(elem[6].text),int(elem[7].text))
                     break
             count += 1
-                    
+
     def __create_main_window(self, args):
         self.main_window = MainWindow(
             {
@@ -554,7 +566,7 @@ class ControlPanel(object):
         self.pyqt_env = PyQTEnv()
 
         self.pyqt_env.run(self.__create_main_window, None)
-        
+
         self.main_window.update_input_list(self.tensor_input_list)
 
         print('control_panel _init')
@@ -587,7 +599,7 @@ class ControlPanel(object):
             placeholder_dict={}
             for t in self.all_ops:
                 if t.op.op.type == 'Placeholder':
-                    placeholder_dict[t.name] = t.op 
+                    placeholder_dict[t.name] = t.op
             names = os.path.split(os.path.abspath(filename))
             path = names[0]
             module_name = names[1].split('.')[-2]
@@ -596,7 +608,7 @@ class ControlPanel(object):
             print('* module path is: %s, name is: %s'%(path, module_name))
             #add module search path
             sys.path.append(path)
-            
+
             temp_module = importlib.import_module(module_name)
             input_obj = temp_module.TensorInput(placeholder_dict, config_dict)
             input_obj.show()
@@ -604,7 +616,7 @@ class ControlPanel(object):
             input_item = self.TensorInputItem(input_name, input_obj)
             self.tensor_input_list.append(input_item)
             self.main_window.update_input_list(self.tensor_input_list)
-        except Exception as e: 
+        except Exception as e:
             print('Add_input error:', e)
 
     """
